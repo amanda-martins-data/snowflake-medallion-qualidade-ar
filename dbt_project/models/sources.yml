@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: AIR_QUALITY
+    schema: BRONZE
+    tables:
+      - name: raw_openaq
+        description: >
+          Camada Bronze: payload bruto da OpenAQ em VARIANT, um registro
+          por arquivo carregado via PUT + COPY INTO (src/load_bronze.py).
+          Append-only; nunca é atualizada nem limpa.
+        config:
+          loaded_at_field: _loaded_at
+          freshness:
+            warn_after: {count: 24, period: hour}
+            error_after: {count: 72, period: hour}
+        columns:
+          - name: payload
+            description: JSON completo retornado pela extração (schema-on-read).
+          - name: _source_file
+            description: Arquivo do stage de onde a linha veio.
+          - name: _loaded_at
+            description: Momento da carga no Snowflake.

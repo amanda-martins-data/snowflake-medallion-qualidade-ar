@@ -1,0 +1,18 @@
+# Copie para profiles.yml nesta mesma pasta e rode o dbt com --profiles-dir .
+# Nenhuma credencial fica no arquivo: tudo vem de variáveis de ambiente
+# (as mesmas usadas por src/load_bronze.py). Veja "Configuração" no README.
+
+snowflake_air_quality:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      role: TRANSFORMER
+      warehouse: WH_AIR_QUALITY_XS
+      database: AIR_QUALITY
+      schema: SILVER
+      threads: 4
+      query_tag: dbt_air_quality

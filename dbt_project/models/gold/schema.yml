@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: gold_air_quality_daily
+    description: >
+      Agregação diária de qualidade do ar por cidade e poluente, com
+      classificação de AQI para PM2.5. Pronta para consumo em BI.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [city, parameter, unit, measured_date]
+    columns:
+      - name: city
+        data_tests: [not_null]
+      - name: parameter
+        data_tests: [not_null]
+      - name: avg_value
+        data_tests: [not_null]
+      - name: reading_count
+        data_tests: [not_null]
+      - name: aqi_category_pm25
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - "Boa"
+                  - "Moderada"
+                  - "Insalubre p/ grupos sensíveis"
+                  - "Insalubre"
+                  - "Muito insalubre"
+              config:
+                where: "parameter = 'pm25'"
