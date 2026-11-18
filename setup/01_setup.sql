@@ -10,8 +10,9 @@
 --     TRANSFORMER (lê a Bronze, escreve Silver/Gold via dbt)
 --   * file format JSON, stage interno de landing e a tabela Bronze
 --
--- Antes de rodar: troque <SEU_USUARIO> pelo seu usuário do Snowflake
--- (o mesmo que aparece no canto inferior esquerdo do Snowsight).
+-- Antes de rodar: troque <SEU_USUARIO> pelo resultado de
+-- `select current_user();`, mantendo as aspas duplas (preservam
+-- maiúsculas/minúsculas do nome).
 -- =====================================================================
 
 use role accountadmin;
@@ -67,9 +68,9 @@ grant select on future tables in schema air_quality.bronze to role transformer;
 grant usage, create table, create view on schema air_quality.silver to role transformer;
 grant usage, create table, create view on schema air_quality.gold   to role transformer;
 
--- Seu usuário recebe as duas roles (troque <SEU_USUARIO>)
-grant role loader      to user <SEU_USUARIO>;
-grant role transformer to user <SEU_USUARIO>;
+-- Seu usuário recebe as duas roles (troque <SEU_USUARIO>, mantendo as aspas)
+grant role loader      to user "<SEU_USUARIO>";
+grant role transformer to user "<SEU_USUARIO>";
 
 -- ---------------------------------------------------------------------
 -- 4. Objetos da Bronze, criados já como LOADER (ele vira o dono)

@@ -58,10 +58,14 @@ def generate(user: str) -> None:
     print(f"Chave privada: {private_path}")
     print(f"Chave pública: {public_path}\n")
     print("Cole no Snowsight (como ACCOUNTADMIN):\n")
-    print(f"alter user {user} set rsa_public_key = '{body}';")
+    # Aspas preservam maiúsculas/minúsculas: o nome precisa ser exatamente
+    # o retornado por `select current_user();` no Snowsight.
+    print(f'alter user "{user}" set rsa_public_key = \'{body}\';')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gera par de chaves RSA para o Snowflake.")
-    parser.add_argument("--user", required=True, help="Seu usuário do Snowflake.")
+    parser.add_argument(
+        "--user", required=True, help="Seu usuário, exatamente como em `select current_user();`."
+    )
     generate(parser.parse_args().user)

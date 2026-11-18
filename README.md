@@ -71,15 +71,17 @@ local estão em [`docs/architecture.md`](docs/architecture.md).
 ### 1. Conta e infraestrutura
 
 1. Crie uma conta trial em [signup.snowflake.com](https://signup.snowflake.com).
-2. No Snowsight, abra uma worksheet como `ACCOUNTADMIN`, troque
-   `<SEU_USUARIO>` em [`setup/01_setup.sql`](setup/01_setup.sql) e
-   rode o script inteiro.
+2. No Snowsight, abra uma worksheet como `ACCOUNTADMIN` e rode
+   `select current_user();` para ver seu usuário exatamente como o
+   Snowflake o guarda. Troque `<SEU_USUARIO>` em
+   [`setup/01_setup.sql`](setup/01_setup.sql) por esse valor, mantendo
+   as aspas, e rode o script inteiro.
 
 ### 2. Autenticação por par de chaves
 
 ```bash
 pip install -r requirements.txt
-python src/generate_keypair.py --user SEU_USUARIO
+python src/generate_keypair.py --user SEU_USUARIO   # o mesmo valor de current_user()
 ```
 
 O script cria `keys/snowflake_rsa_key.p8` (fora do Git) e imprime um
