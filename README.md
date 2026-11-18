@@ -94,11 +94,19 @@ O identificador da conta (`ORGNAME-ACCOUNTNAME`) aparece no Snowsight,
 no menu da sua conta (canto inferior esquerdo), nos detalhes da conta,
 em **Account identifier**.
 
+`SNOWFLAKE_USER` é o **login** do usuário, que pode ser diferente do
+nome (em contas criadas por e-mail, o login costuma ser o próprio
+e-mail). Confira com:
+
+```sql
+desc user "SEU_USUARIO";   -- linha LOGIN_NAME
+```
+
 PowerShell (Windows):
 
 ```powershell
 $env:SNOWFLAKE_ACCOUNT = "ORGNAME-ACCOUNTNAME"
-$env:SNOWFLAKE_USER = "SEU_USUARIO"
+$env:SNOWFLAKE_USER = "SEU_LOGIN"
 $env:SNOWFLAKE_PRIVATE_KEY_PATH = "$PWD\keys\snowflake_rsa_key.p8"
 ```
 
@@ -106,7 +114,7 @@ Bash (macOS/Linux):
 
 ```bash
 export SNOWFLAKE_ACCOUNT="ORGNAME-ACCOUNTNAME"
-export SNOWFLAKE_USER="SEU_USUARIO"
+export SNOWFLAKE_USER="SEU_LOGIN"
 export SNOWFLAKE_PRIVATE_KEY_PATH="$PWD/keys/snowflake_rsa_key.p8"
 ```
 
@@ -138,4 +146,45 @@ select city, measured_date, avg_value, aqi_category_pm25
 from air_quality.gold.gold_air_quality_daily
 where parameter = 'pm25'
 order by measured_date desc, city;
+```
+
+## Resultado
+
+Execução em uma conta Snowflake (AWS, São Paulo), com dados sintéticos
+de 11 a 18/11/2026:
+
+| Camada | Linhas | O que representa |
+|---|---|---|
+| Bronze | 1 | Um arquivo JSON carregado inteiro em `VARIANT` |
+| Silver | 580 | Medições individuais, depois do `FLATTEN` e da deduplicação |
+| Gold | 120 | 3 cidades × 5 poluentes × 8 dias |
+
+`dbt build`: **16 de 16 OK** (2 modelos e 14 testes), em 4,3 segundos.
+
+PM2.5 em 17/11/2026, último dia completo:
+
+| city           | reading_count | avg_value (µg/m³) | aqi_category_pm25             |
+|----------------|---------------|-------------------|-------------------------------|
+| Belo Horizonte | 4             | 40.18             | Insalubre p/ grupos sensíveis |
+| Rio de Janeiro | 4             | 25.64             | Moderada                      |
+| São Paulo      | 8             | 34.11             | Moderada                      |
+
+São Paulo tem o dobro de leituras porque tem duas estações.
+
+## Problemas comuns
+
+| Erro | Causa | Solução |
+|---|---|---|
+| `JWT token is invalid` e, no `login_history`, `JWT_TOKEN_INVALID_EXPIRATION_TIME` | Relógio do computador adiantado ou atrasado; o token de autenticação vale por poucos segundos | Sincronizar data e hora do sistema |
+| `certificate not valid yet` | Data do sistema errada | Sincronizar data e hora do sistema |
+| `JWT token is invalid` com o relógio certo | `SNOWFLAKE_USER` com o nome em vez do login, ou chave pública não registrada | Usar o `LOGIN_NAME` de `desc user` e conferir `RSA_PUBLIC_KEY_FP` |
+
+Para ver o motivo exato de uma falha de login:
+
+```sql
+select event_timestamp, user_name, first_authentication_factor,
+       is_success, error_message
+from table(snowflake.information_schema.login_history(
+    time_range_start => dateadd('hour', -1, current_timestamp())))
+order by event_timestamp desc;
 ```
